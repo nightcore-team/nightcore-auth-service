@@ -12,14 +12,25 @@ router = APIRouter()
 @router.post(
     "/refresh", status_code=status.HTTP_200_OK, response_model=TokenResponse
 )
-async def refresh(request: Request, service: OICServiceDependency):
+async def refresh(
+    request: Request, response: Response, service: OICServiceDependency
+):
     """Refresh access token by refresh token."""
     refresh_token = request.cookies.get("refresh_token")
     ip_address = request.client.host if request.client else "unknown"
 
-    return await service.refresh(
+    token = await service.refresh(
         refresh_token=refresh_token, ip_address=ip_address
     )
+
+    response.set_cookie(
+        "refresh_token",
+        token.refresh_token,
+        httponly=True,
+        max_age=service.config.jwt.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600,
+    )
+
+    return TokenResponse(access_token=token.access_token)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -49,12 +60,11 @@ async def discord(service: OICServiceDependency) -> RedirectResponse:
 )
 async def discord_callback(
     code: str,
-    service: OICServiceDependency,
     request: Request,
     response: Response,
+    service: OICServiceDependency,
 ):
     """Handle Discord auth callback."""
-
     ip_address = request.client.host if request.client else "unknown"
 
     token = await service.login(code=code, ip_address=ip_address)
