@@ -7,10 +7,13 @@ from typing import Any
 
 from jose import ExpiredSignatureError, JWTError, jwt
 
+from src.domain.interfaces.token import ITokenService
+
 from .config import Config as JWTConfig
+from .exceptions import InvalidTokenError, TokenExpiredError
 
 
-class JWTTokenService:
+class JWTTokenService(ITokenService):
     def __init__(
         self,
         config: JWTConfig,
@@ -20,12 +23,7 @@ class JWTTokenService:
     def create_access_token(self, user_id: str) -> str:
         """Create access token for user."""
 
-        return self.sign(
-            {
-                "sub": user_id,
-                "type": "access",
-            }
-        )
+        return self.sign({"sub": user_id})
 
     def create_refresh_token(self) -> str:
         """Create refresh token for user."""
@@ -50,32 +48,27 @@ class JWTTokenService:
                 ),
             }
         )
-
-        return jwt.encode(
-            full_payload,
-            self.config.JWT_PRIVATE_KEY,
-            algorithm=self.config.JWT_ALGORITHM,
-        )
-
-    def verify(self, token: str) -> bool:
-        """Verify token signature and expiration."""
         try:
-            jwt.decode(
+            return jwt.encode(
+                full_payload,
+                self.config.JWT_PRIVATE_KEY,
+                algorithm=self.config.JWT_ALGORITHM,
+            )
+        except JWTError as e:
+            raise InvalidTokenError() from e
+
+    def decode(self, token: str) -> dict[str, Any]:
+        """Decode token and validate signature + expiration."""
+
+        try:
+            return jwt.decode(
                 token,
                 self.config.JWT_PUBLIC_KEY,
                 algorithms=[self.config.JWT_ALGORITHM],
             )
-            return True
-        except ExpiredSignatureError:
-            return False
-        except JWTError:
-            return False
 
-    def decode(self, token: str) -> dict[str, Any]:
-        """Verify and return payload."""
+        except ExpiredSignatureError as e:
+            raise TokenExpiredError() from e
 
-        return jwt.decode(
-            token,
-            self.config.JWT_PUBLIC_KEY,
-            algorithms=[self.config.JWT_ALGORITHM],
-        )
+        except JWTError as e:
+            raise InvalidTokenError() from e

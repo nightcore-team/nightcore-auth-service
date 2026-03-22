@@ -1,7 +1,6 @@
 """Interface for services that can be used in the OIC flow."""
 
 from typing import Any, Protocol
-from uuid import UUID
 
 
 class ITokenService(Protocol):
@@ -15,10 +14,6 @@ class ITokenService(Protocol):
 
     def sign(self, payload: dict[str, Any]) -> str:
         """Create and sign JWT token."""
-        ...
-
-    def verify(self, token: str) -> bool:
-        """Verify token signature and expiration."""
         ...
 
     def decode(self, token: str) -> dict[str, Any]:

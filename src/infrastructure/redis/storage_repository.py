@@ -4,8 +4,10 @@ import json
 from dataclasses import asdict
 from typing import TYPE_CHECKING
 
+from redis.exceptions import ConnectionError, TimeoutError
 from src.domain.interfaces.storage_repository import IStorageRepository
 
+from .exceptions import RedisError
 from .models import Session
 
 if TYPE_CHECKING:
@@ -41,16 +43,22 @@ class RedisStorageRepository(IStorageRepository):
             expires_in=ttl,
         )
 
-        await self.client.set(
-            self._key(refresh_token), self._dumps(session), ex=ttl
-        )
+        try:
+            await self.client.set(
+                self._key(refresh_token), self._dumps(session), ex=ttl
+            )
+        except (ConnectionError, TimeoutError) as e:
+            raise RedisError("Failed to communicate with Redis storage") from e
 
         return session
 
     async def get(self, refresh_token: str) -> Session | None:
         """Get a user from the storage by their refresh token."""
 
-        data = await self.client.get(self._key(refresh_token))
+        try:
+            data = await self.client.get(self._key(refresh_token))
+        except (ConnectionError, TimeoutError) as e:
+            raise RedisError("Failed to communicate with Redis storage") from e
 
         if data is None:
             return None
@@ -60,4 +68,7 @@ class RedisStorageRepository(IStorageRepository):
     async def delete(self, refresh_token: str) -> None:
         """Delete a user from the storage by their refresh token."""
 
-        await self.client.delete(self._key(refresh_token))
+        try:
+            await self.client.delete(self._key(refresh_token))
+        except (ConnectionError, TimeoutError) as e:
+            raise RedisError("Failed to communicate with Redis storage") from e

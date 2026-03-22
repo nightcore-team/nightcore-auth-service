@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from src.domain.entities.token import Token
-from src.domain.exceptions import (
+from src.domain.exceptions.token import (
     RefreshTokenNotProvidedError,
     TokenRevokedError,
 )
@@ -29,7 +29,7 @@ class OICService(IOICService):
         self.storage = storage
         self.config = config
 
-    async def login(self, code: str, ip_address: str) -> Token:
+    async def login(self, code: str | None, ip_address: str) -> Token:
         """Start the OIC flow."""
 
         token_data = await self.oauth_provider.exchange_code(code)
@@ -56,6 +56,7 @@ class OICService(IOICService):
         self, refresh_token: str | None, ip_address: str
     ) -> Token:
         """Refresh the user's access token using the refresh token."""
+
         if not refresh_token:
             raise RefreshTokenNotProvidedError()
 
@@ -83,7 +84,7 @@ class OICService(IOICService):
         )
 
         return Token(
-            access_token=jwt_access_token, refresh_token=session.refresh_token
+            access_token=jwt_access_token, refresh_token=jwt_refresh_token
         )
 
     async def logout(self, refresh_token: str | None) -> None:
