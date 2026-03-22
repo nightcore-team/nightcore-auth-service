@@ -46,7 +46,7 @@ async def logout(
     await service.logout(refresh_token=refresh_token)
 
 
-@router.post("/discord", status_code=307)
+@router.post("/discord", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 async def discord(service: OICServiceDependency) -> RedirectResponse:
     """Authenticate user by Discord."""
 
