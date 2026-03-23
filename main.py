@@ -1,26 +1,39 @@
-"""Main application entrypoint."""
+"""Main entry point for the Nightcore Dashboard Backend."""
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+import asyncio
+import contextlib
+import signal
 
-from src.api import api_router
-from src.api.events.exceptions import EXCEPTION_HANDLERS
-from src.api.events.lifespan import lifespan
+from src.setup import create_api_server
 
 
-def main() -> FastAPI:
-    """Create and configure the FastAPI application."""
+async def main() -> None:
+    """Main function to start the Nightcore Dashboard Backend."""
+    # Set up logging
+    # Create API Server
+    server = create_api_server()
+    server_task = asyncio.create_task(server.serve())
 
-    app = FastAPI(lifespan=lifespan)
-    app.include_router(api_router)
-    app.exception_handlers.update(EXCEPTION_HANDLERS)
+    loop = asyncio.get_running_loop()
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    def shutdown() -> None:
+        server.should_exit = True
 
-    return app
+    # Register signal handlers
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        loop.add_signal_handler(sig, shutdown)
+
+    try:
+        await server_task
+    except asyncio.CancelledError:
+        pass  # add logging
+    except Exception:
+        pass  # add logging
+    finally:
+        # Cleanup resources
+        pass  # add logging
+
+
+if __name__ == "__main__":
+    with contextlib.suppress(KeyboardInterrupt):
+        asyncio.run(main())

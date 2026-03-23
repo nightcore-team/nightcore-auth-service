@@ -15,7 +15,3 @@ class IOAuthProvider(Protocol):
     async def get_user_info(self, token_data: Any) -> Any:
         """Get the user's information using the access token."""
         ...
-
-    async def refresh_token(self, refresh_token: str) -> Any:
-        """Refresh the access token using the refresh token."""
-        ...

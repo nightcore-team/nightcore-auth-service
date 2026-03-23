@@ -1,24 +1,42 @@
-FROM python:${PYTHON_VERSION}-slim
+### ───────────────────────────────────────────────
+### Builder stage
+### ───────────────────────────────────────────────
+FROM ghcr.io/astral-sh/uv:python3.13-alpine AS builder
 
-# Prevents Python from writing pyc files.
-ENV PYTHONDONTWRITEBYTECODE=1
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy
+ENV UV_PYTHON_DOWNLOADS=0
 
-# Keeps Python from buffering stdout and stderr to avoid situations where
-# the application crashes without emitting any logs due to buffering.
-ENV PYTHONUNBUFFERED=1
+WORKDIR /app
 
-RUN apt update && apt install -y build-essential
+COPY pyproject.toml uv.lock ./
 
-RUN python -m pip install poetry
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-install-project --no-dev
 
-WORKDIR /service/
+COPY . /app
 
-COPY . .
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-dev
 
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-root
+RUN rm -f pyproject.toml uv.lock .python-version \
+    && rm -rf /app/.cache
 
+### ───────────────────────────────────────────────
+### Runtime stage
+### ───────────────────────────────────────────────
+FROM python:3.13-alpine AS runtime
 
-RUN chmod +x ./scripts/
+WORKDIR /app
 
-ENTRYPOINT ./scripts/docker-entrypoint.sh
+COPY --from=builder /app /app
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+RUN rm -rf /app/.venv/share \
+    /app/.venv/lib/python*/test \
+    /app/.venv/lib/python*/ensurepip \
+    /app/.venv/lib/python*/distutils/tests \
+    /app/.venv/lib/python*/tkinter \
+    && chmod +x ./docker/*
+
+CMD ["./docker/docker-entrypoint.sh"]

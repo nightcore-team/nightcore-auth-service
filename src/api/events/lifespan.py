@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
 
-from src.core.config._global import Config
+from src.core.config._global import config
 from src.infrastructure.redis.client import create_redis_client
 
 if TYPE_CHECKING:
@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 @asynccontextmanager
 async def lifespan(app: "FastAPI") -> AsyncGenerator[None]:
     """Lifespan event handler for the API."""
-    config = Config()
     app.state.config = config
 
     redis_client = create_redis_client(config.redis)
