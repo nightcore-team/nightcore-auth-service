@@ -1,7 +1,7 @@
 [project]
 name = "nightcore-auth-service"
 version = "0.1.0"
-description = "Add your description here"
+description = "Authentication service for the Nightcore Dashboard."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
