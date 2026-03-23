@@ -211,3 +211,6 @@ __marimo__/
 typings/
 
 t.py
+
+# Keys
+*.pem
