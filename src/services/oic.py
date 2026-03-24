@@ -7,11 +7,11 @@ from src.domain.exceptions.token import (
     RefreshTokenNotProvidedError,
     TokenRevokedError,
 )
+from src.domain.interfaces.oic import IOICService
 
 if TYPE_CHECKING:
     from src.core.config._global import Config
     from src.domain.interfaces.oauth_provider import IOAuthProvider
-    from src.domain.interfaces.oic import IOICService
     from src.domain.interfaces.storage_repository import IStorageRepository
     from src.domain.interfaces.token import ITokenService
 
