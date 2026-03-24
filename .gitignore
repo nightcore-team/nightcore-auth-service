@@ -214,3 +214,6 @@ t.py
 
 # Keys
 *.pem
+
+# Redis
+.redisinsight/
