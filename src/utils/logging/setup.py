@@ -29,9 +29,10 @@ def setup_logging() -> logging.Logger:
     handlers.append(console_handler)
 
     # --- uvicorn ---
-    uvicorn_logger = logging.getLogger("uvicorn")
-    uvicorn_logger.setLevel(logging.INFO)
-    uvicorn_logger.propagate = True
+    for name in ["uvicorn", "uvicorn.error", "uvicorn.access"]:
+        logger = logging.getLogger(name)
+        logger.handlers.clear()
+        logger.propagate = True
 
     # # --- redis ---
     redis_logger = logging.getLogger("redis")
