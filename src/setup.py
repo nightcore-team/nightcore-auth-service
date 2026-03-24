@@ -28,6 +28,7 @@ def create_api_server() -> uvicorn.Server:
             app=app,
             host=config.api.API_HOST,
             port=config.api.API_PORT,
+            log_config=None,
         )
     )
 
