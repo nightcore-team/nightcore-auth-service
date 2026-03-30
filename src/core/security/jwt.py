@@ -3,14 +3,13 @@
 import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
-from typing import Any
 
-from jose import ExpiredSignatureError, JWTError, jwt
+from jose import JWTError, jwt
 
 from src.domain.interfaces.token import ITokenService
 
 from .config import Config as JWTConfig
-from .exceptions import InvalidTokenError, TokenExpiredError
+from .exceptions import InvalidTokenError
 
 
 class JWTTokenService(ITokenService):
@@ -54,21 +53,5 @@ class JWTTokenService(ITokenService):
                 self.config.JWT_PRIVATE_KEY,
                 algorithm=self.config.JWT_ALGORITHM,
             )
-        except JWTError as e:
-            raise InvalidTokenError() from e
-
-    def decode(self, token: str) -> dict[str, Any]:
-        """Decode token and validate signature + expiration."""
-
-        try:
-            return jwt.decode(
-                token,
-                self.config.JWT_PUBLIC_KEY,
-                algorithms=[self.config.JWT_ALGORITHM],
-            )
-
-        except ExpiredSignatureError as e:
-            raise TokenExpiredError() from e
-
         except JWTError as e:
             raise InvalidTokenError() from e

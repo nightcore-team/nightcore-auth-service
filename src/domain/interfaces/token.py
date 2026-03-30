@@ -15,7 +15,3 @@ class ITokenService(Protocol):
     def sign(self, payload: dict[str, Any]) -> str:
         """Create and sign JWT token."""
         ...
-
-    def decode(self, token: str) -> dict[str, Any]:
-        """Verify and return payload."""
-        ...
