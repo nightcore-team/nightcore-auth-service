@@ -59,12 +59,10 @@ async def discord_exception_handler(
 
     status_code = status.HTTP_401_UNAUTHORIZED
 
-    if isinstance(exc, AuthorizationCodeNotProvidedError):
+    if isinstance(exc, AuthorizationCodeNotProvidedError | TokenExchangeError):
         status_code = status.HTTP_400_BAD_REQUEST
-    elif isinstance(
-        exc, DiscordAPIError | UserInfoRetrievalError | TokenExchangeError
-    ):
-        status_code = status.HTTP_502_BAD_GATEWAY
+    elif isinstance(exc, DiscordAPIError | UserInfoRetrievalError):
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
     return JSONResponse(
         status_code=status_code,

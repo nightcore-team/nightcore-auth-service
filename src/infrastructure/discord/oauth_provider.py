@@ -87,8 +87,13 @@ class DiscordOAuthProvider(IOAuthProvider):
             ):
                 data = await response.json()
 
-                if response.status != 200:
-                    raise UserInfoRetrievalError(
+                if response.status >= 500:
+                    raise DiscordAPIError(
+                        f"Discord API error ({response.status}): {data}"
+                    )
+
+                if response.status >= 400:
+                    raise TokenExchangeError(
                         f"Discord API error ({response.status}): {data}"
                     )
 
