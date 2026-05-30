@@ -1,9 +1,10 @@
 name: nightcore-auth-service
 
 networks:
-  nightcore-auth:
-    name: nightcore-auth
+  nightcore-network:
+    name: nightcore-network
     driver: bridge
+    external: true
 
 services:
   nightcore-auth-service:
@@ -20,11 +21,20 @@ services:
       - ./src/:/app/src/
       - ./main.py:/app/main.py
 
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard-auth-service.rule=Host(`${API_DOMAIN}`) && Path(`/auth`)"
+      - "traefik.http.routers.dashboard-auth-service.priority=20"
+      - "traefik.http.routers.dashboard-auth-service.entrypoints=websecure"
+      - "traefik.http.routers.dashboard-auth-service.service=dashboard-auth-service"
+      - "traefik.http.services.dashboard-auth-service.loadbalancer.server.port=${API_PORT}"
+      - "traefik.http.routers.dashboard-auth-service.tls=true"
+
     depends_on:
       - nightcore-auth-redis
 
     networks:
-      - nightcore-auth
+      - nightcore-network
 
     ports:
       - "${API_PORT}:${API_PORT}"
