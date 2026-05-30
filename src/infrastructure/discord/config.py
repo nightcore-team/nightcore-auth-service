@@ -1,6 +1,6 @@
 """Discord authentication configuration."""
 
-from src.core.config import BaseEnvConfig
+from src.core.config.env import BaseEnvConfig
 
 
 class Config(BaseEnvConfig):
