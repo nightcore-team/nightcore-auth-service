@@ -61,11 +61,11 @@ class OICService(IOICService):
         session = await self.storage.get(refresh_token)
 
         if session is None:
-            raise TokenRevokedError()
+            raise TokenRevokedError("Session not found")
 
         if session.ip_address != ip_address:
             await self.storage.delete(refresh_token)
-            raise TokenRevokedError()
+            raise TokenRevokedError("Invalid or revoked token")
 
         await self.storage.delete(refresh_token)
 
