@@ -1,9 +1,14 @@
 """Setup module for creating and configuring the FastAPI bot instance."""
 
+from typing import cast
+
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from starlette.types import ExceptionHandler
 
 from src.api import router as api_router
+from src.api.events.exceptions import EXCEPTION_HANDLERS
 from src.api.events.lifespan import lifespan
 from src.core.config._global import config
 
@@ -12,6 +17,19 @@ def create_fastapi() -> FastAPI:
     """Create and return an instance of the FastAPI application."""
 
     app = FastAPI(title="Nightcore Auth Service", lifespan=lifespan)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            config.api.DASHBOARD_FRONTEND_URI,
+        ],
+        allow_credentials=True,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["*"],
+    )
+
+    for exc_type, handler in EXCEPTION_HANDLERS.items():
+        app.add_exception_handler(exc_type, cast(ExceptionHandler, handler))
 
     app.include_router(api_router)
 
