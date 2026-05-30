@@ -66,3 +66,4 @@ def get_discord_oic_service(
 
 
 OICServiceDependency = Annotated[OICService, Depends(get_discord_oic_service)]
+AppConfigDependency = Annotated[Config, Depends(get_config)]

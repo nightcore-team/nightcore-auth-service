@@ -8,3 +8,4 @@ class Config(BaseEnvConfig):
 
     API_HOST: str
     API_PORT: int
+    DASHBOARD_FRONTEND_URI: str
