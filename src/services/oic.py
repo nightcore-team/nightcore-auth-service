@@ -67,7 +67,10 @@ class OICService(IOICService):
             await self.storage.delete(refresh_token)
             raise TokenRevokedError("Invalid or revoked token")
 
-        await self.storage.delete(refresh_token)
+        keys_count = await self.storage.delete(refresh_token)
+
+        if keys_count < 1:
+            raise TokenRevokedError("Token already used or expired")
 
         jwt_access_token = self.token_service.create_access_token(
             session.user_id

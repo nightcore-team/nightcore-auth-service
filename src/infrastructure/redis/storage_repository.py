@@ -65,10 +65,10 @@ class RedisStorageRepository(IStorageRepository):
 
         return self._loads(data)
 
-    async def delete(self, refresh_token: str) -> None:
+    async def delete(self, refresh_token: str) -> int:
         """Delete a user from the storage by their refresh token."""
 
         try:
-            await self.client.delete(self._key(refresh_token))
+            return await self.client.delete(self._key(refresh_token))
         except (ConnectionError, TimeoutError) as e:
             raise RedisError("Failed to communicate with Redis storage") from e
