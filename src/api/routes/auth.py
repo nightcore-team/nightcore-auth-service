@@ -17,6 +17,13 @@ async def refresh(
 ):
     """Refresh access token by refresh token."""
     refresh_token = request.cookies.get("refresh_token")
+
+    if refresh_token is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Refresh token not found",
+        )
+
     ip_address = request.client.host if request.client else "unknown"
 
     token = await service.refresh(
@@ -40,6 +47,9 @@ async def logout(
     """Logout user by refresh token."""
 
     refresh_token = request.cookies.get("refresh_token")
+
+    if refresh_token is None:
+        return
 
     response.delete_cookie("refresh_token", httponly=True)
 
@@ -79,7 +89,10 @@ async def discord_callback(
             detail="Code is not found in query",
         )
 
-    ip_address = request.client.host if request.client else "unknown"
+    ip_address = request.headers.get("X-Real-IP")
+
+    if ip_address is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     token = await service.login(code=code, ip_address=ip_address)
 

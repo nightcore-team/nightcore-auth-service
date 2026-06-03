@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from src.domain.entities.token import Token
 from src.domain.exceptions.token import (
-    RefreshTokenNotProvidedError,
     TokenRevokedError,
 )
 from src.domain.interfaces.oic import IOICService
@@ -39,6 +38,8 @@ class OICService(IOICService):
         jwt_access_token = self.token_service.create_access_token(user_info.id)
         jwt_refresh_token = self.token_service.create_refresh_token()
 
+        await self.storage.delete(user_info.id)
+
         await self.storage.create(
             user_info.id,
             jwt_refresh_token,
@@ -50,13 +51,8 @@ class OICService(IOICService):
             access_token=jwt_access_token, refresh_token=jwt_refresh_token
         )
 
-    async def refresh(
-        self, refresh_token: str | None, ip_address: str
-    ) -> Token:
+    async def refresh(self, refresh_token: str, ip_address: str) -> Token:
         """Refresh the user's access token using the refresh token."""
-
-        if not refresh_token:
-            raise RefreshTokenNotProvidedError()
 
         session = await self.storage.get(refresh_token)
 
@@ -64,10 +60,10 @@ class OICService(IOICService):
             raise TokenRevokedError("Session not found")
 
         if session.ip_address != ip_address:
-            await self.storage.delete(refresh_token)
+            await self.storage.delete(session.user_id, refresh_token)
             raise TokenRevokedError("Invalid or revoked token")
 
-        keys_count = await self.storage.delete(refresh_token)
+        keys_count = await self.storage.delete(session.user_id, refresh_token)
 
         if keys_count < 1:
             raise TokenRevokedError("Token already used or expired")
@@ -88,10 +84,12 @@ class OICService(IOICService):
             access_token=jwt_access_token, refresh_token=jwt_refresh_token
         )
 
-    async def logout(self, refresh_token: str | None) -> None:
+    async def logout(self, refresh_token: str) -> None:
         """Logout the user by deleting their data from the storage."""
 
-        if not refresh_token:
+        session = await self.storage.get(refresh_token)
+
+        if session is None:
             return
 
-        await self.storage.delete(refresh_token)
+        await self.storage.delete(session.user_id, refresh_token)

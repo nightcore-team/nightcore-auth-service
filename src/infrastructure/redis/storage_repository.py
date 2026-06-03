@@ -18,8 +18,11 @@ class RedisStorageRepository(IStorageRepository):
     def __init__(self, client: "Redis"):
         self.client = client
 
-    def _key(self, refresh_token: str) -> str:
+    def _session_key(self, refresh_token: str) -> str:
         return f"session:{refresh_token}"
+
+    def _user_sessions_key(self, user_id: str) -> str:
+        return f"user_sessions:{user_id}"
 
     def _dumps(self, value: Session) -> str:
         return json.dumps(asdict(value))
@@ -44,9 +47,17 @@ class RedisStorageRepository(IStorageRepository):
         )
 
         try:
-            await self.client.set(
-                self._key(refresh_token), self._dumps(session), ex=ttl
-            )
+            async with self.client.pipeline(transaction=True) as pipe:
+                pipe.set(
+                    self._session_key(refresh_token),
+                    self._dumps(session),
+                    ex=ttl,
+                )
+                pipe.sadd(self._user_sessions_key(user_id), refresh_token)
+                pipe.expire(self._user_sessions_key(user_id), ttl)
+
+                await pipe.execute(raise_on_error=True)
+
         except (ConnectionError, TimeoutError) as e:
             raise RedisError("Failed to communicate with Redis storage") from e
 
@@ -56,7 +67,7 @@ class RedisStorageRepository(IStorageRepository):
         """Get a user from the storage by their refresh token."""
 
         try:
-            data = await self.client.get(self._key(refresh_token))
+            data = await self.client.get(self._session_key(refresh_token))
         except (ConnectionError, TimeoutError) as e:
             raise RedisError("Failed to communicate with Redis storage") from e
 
@@ -65,10 +76,37 @@ class RedisStorageRepository(IStorageRepository):
 
         return self._loads(data)
 
-    async def delete(self, refresh_token: str) -> int:
+    async def delete(
+        self, user_id: str, refresh_token: str | None = None
+    ) -> int:
         """Delete a user from the storage by their refresh token."""
 
         try:
-            return await self.client.delete(self._key(refresh_token))
+            if refresh_token:
+                async with self.client.pipeline(transaction=True) as pipe:
+                    pipe.delete(self._session_key(refresh_token))
+                    pipe.srem(self._user_sessions_key(user_id), refresh_token)
+                    results = await pipe.execute(raise_on_error=True)
+
+                return results[0]
+
+            else:
+                user_sessions_key = self._user_sessions_key(user_id)
+
+                tokens = await self.client.smembers(user_sessions_key)  # type: ignore
+
+                if not tokens:
+                    return 0
+
+                session_keys = [self._session_key(token) for token in tokens]  # type: ignore
+
+                async with self.client.pipeline(transaction=True) as pipe:
+                    pipe.delete(*session_keys)
+                    pipe.delete(user_sessions_key)
+
+                    results = await pipe.execute(raise_on_error=True)
+
+                return results[0]
+
         except (ConnectionError, TimeoutError) as e:
             raise RedisError("Failed to communicate with Redis storage") from e
