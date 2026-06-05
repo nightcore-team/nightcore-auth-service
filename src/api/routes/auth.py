@@ -69,11 +69,11 @@ async def login(service: OICServiceDependency) -> RedirectResponse:
     response_model=TokenResponse,
 )
 async def discord_callback(
-    code: str | None,
-    error: str | None,
     request: Request,
     service: OICServiceDependency,
     config: AppConfigDependency,
+    code: str | None = None,
+    error: str | None = None,
 ):
     """Handle Discord auth callback."""
 
