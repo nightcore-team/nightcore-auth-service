@@ -13,7 +13,7 @@ class Config(BaseEnvConfig):
     JWT_PUBLIC_KEY: str
     JWT_PRIVATE_KEY: str
     JWT_ALGORITHM: str
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 5
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 2
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
     @field_validator("JWT_PRIVATE_KEY", mode="before")
