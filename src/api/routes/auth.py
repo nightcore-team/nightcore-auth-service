@@ -89,7 +89,7 @@ async def discord_callback(
             detail="Code is not found in query",
         )
 
-    ip_address = request.headers.get("X-Real-IP")
+    ip_address = request.headers.get("CF-Connecting-IP")
 
     if ip_address is None:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
