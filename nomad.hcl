@@ -29,11 +29,11 @@ job "auth-service" {
       name = "dashboard-auth-service"
       tags = [
           "traefik.enable=true",
-          "traefik.http.routers.dashboard-auth-service.rule=Host(`${API_DOMAIN}`) && PathPrefix(`/auth`)",
+          "traefik.http.routers.dashboard-auth-service.rule=Host(`api.nightcore.space`) && PathPrefix(`/auth`)",
           "traefik.http.routers.dashboard-auth-service.priority=20",
           "traefik.http.routers.dashboard-auth-service.entrypoints=websecure",
           "traefik.http.routers.dashboard-auth-service.service=dashboard-auth-service",
-          "traefik.http.services.dashboard-auth-service.loadbalancer.server.port=${API_PORT}",
+          "traefik.http.services.dashboard-auth-service.loadbalancer.server.port=5001",
           "traefik.http.routers.dashboard-auth-service.tls=true",
           "traefik.http.middlewares.auth-ratelimit.ratelimit.average=2",
           "traefik.http.middlewares.auth-ratelimit.ratelimit.period=1s",
