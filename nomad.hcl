@@ -29,7 +29,7 @@ job "auth-service" {
       driver = "docker"
 
       vault {
-        role = "runner-auth-service"
+        role = "runner-nightcore-auth-service"
       }
 
       identity {
