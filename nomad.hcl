@@ -87,6 +87,7 @@ EOT
         data = <<EOT
 {{ with secret "secret/data/ci/repos/nightcore-auth-service" }}
 API_PORT={{ .Data.data.API_PORT }}
+API_HOST={{ .Data.data.API_HOST }}
 API_DOMAIN={{ .Data.data.API_DOMAIN }}
 DASHBOARD_FRONTEND_URI={{ .Data.data.DASHBOARD_FRONTEND_URI }}
 JWT_PUBLIC_KEY={{ .Data.data.JWT_PUBLIC_KEY }}
