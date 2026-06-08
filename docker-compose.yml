@@ -23,57 +23,12 @@ services:
 
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.dashboard-auth-service.rule=Host(`${API_DOMAIN}`) && Path(`/auth`)"
+      - "traefik.http.routers.dashboard-auth-service.rule=Host(`${API_DOMAIN}`) && PathPrefix(`/api/auth`)"
       - "traefik.http.routers.dashboard-auth-service.priority=20"
-      - "traefik.http.routers.dashboard-auth-service.entrypoints=websecure"
+      - "traefik.http.routers.dashboard-auth-service.entrypoints=web"
       - "traefik.http.routers.dashboard-auth-service.service=dashboard-auth-service"
       - "traefik.http.services.dashboard-auth-service.loadbalancer.server.port=${API_PORT}"
-      - "traefik.http.routers.dashboard-auth-service.tls=true"
-
-    depends_on:
-      - nightcore-auth-redis
+      - "traefik.http.routers.dashboard-auth-service.tls=false"
 
     networks:
       - nightcore-network
-
-    ports:
-      - "${API_PORT}:${API_PORT}"
-
-  nightcore-auth-redis:
-    image: redis:7-alpine
-    container_name: nightcore-auth-redis
-    restart: no
-    env_file:
-      - .env
-
-    ports:
-      - "${REDIS_PORT}:${REDIS_PORT}"
-
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-    networks:
-      - nightcore-auth
-
-  nightcore-auth-redisinsight:
-    image: redis/redisinsight:latest
-    container_name: nightcore-auth-redisinsight
-    restart: no
-    env_file:
-      - .env
-
-    ports:
-      - "${REDIS_INSIGHT_PORT}:${REDIS_INSIGHT_PORT}"
-
-    volumes:
-      - ./.redisinsight:/data
-
-    depends_on:
-      nightcore-auth-redis:
-        condition: service_healthy
-
-    networks:
-      - nightcore-auth
