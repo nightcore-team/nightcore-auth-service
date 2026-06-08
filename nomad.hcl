@@ -70,7 +70,7 @@ EOT
             "traefik.http.routers.dashboard-auth-service.tls=true",
             "traefik.http.middlewares.auth-ratelimit.ratelimit.average=2",
             "traefik.http.middlewares.auth-ratelimit.ratelimit.period=1s",
-            "traefik.http.middlewares.auth-ratelimit.ratelimit.burst=2"
+            "traefik.http.middlewares.auth-ratelimit.ratelimit.burst=2",
             "traefik.http.routers.dashboard-auth-service.middlewares=auth-ratelimit",
         ]
 
