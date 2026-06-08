@@ -25,6 +25,23 @@ job "auth-service" {
       lost_after = "40s"
     }
 
+    service {
+      name = "dashboard-auth-service"
+      tags = [
+          "traefik.enable=true",
+          "traefik.http.routers.dashboard-auth-service.rule=Host(`${API_DOMAIN}`) && PathPrefix(`/auth`)",
+          "traefik.http.routers.dashboard-auth-service.priority=20",
+          "traefik.http.routers.dashboard-auth-service.entrypoints=websecure",
+          "traefik.http.routers.dashboard-auth-service.service=dashboard-auth-service",
+          "traefik.http.services.dashboard-auth-service.loadbalancer.server.port=${API_PORT}",
+          "traefik.http.routers.dashboard-auth-service.tls=true",
+          "traefik.http.middlewares.auth-ratelimit.ratelimit.average=2",
+          "traefik.http.middlewares.auth-ratelimit.ratelimit.period=1s",
+          "traefik.http.middlewares.auth-ratelimit.ratelimit.burst=2",
+          "traefik.http.routers.dashboard-auth-service.middlewares=auth-ratelimit",
+      ]
+    }
+
     task "auth-service" {
       driver = "docker"
 
@@ -59,20 +76,6 @@ EOT
         image = "ghcr.io/${var.repository}:${var.image_tag}"
 
         network_mode = "host"
-
-        tags = [
-            "traefik.enable=true",
-            "traefik.http.routers.dashboard-auth-service.rule=Host(`${API_DOMAIN}`) && PathPrefix(`/auth`)",
-            "traefik.http.routers.dashboard-auth-service.priority=20",
-            "traefik.http.routers.dashboard-auth-service.entrypoints=websecure",
-            "traefik.http.routers.dashboard-auth-service.service=dashboard-auth-service",
-            "traefik.http.services.dashboard-auth-service.loadbalancer.server.port=${API_PORT}",
-            "traefik.http.routers.dashboard-auth-service.tls=true",
-            "traefik.http.middlewares.auth-ratelimit.ratelimit.average=2",
-            "traefik.http.middlewares.auth-ratelimit.ratelimit.period=1s",
-            "traefik.http.middlewares.auth-ratelimit.ratelimit.burst=2",
-            "traefik.http.routers.dashboard-auth-service.middlewares=auth-ratelimit",
-        ]
 
         auth {
           username       = "${REGISTRY_USERNAME}"
