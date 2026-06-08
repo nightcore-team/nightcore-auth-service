@@ -24,7 +24,10 @@ async def refresh(
             detail="Refresh token not found",
         )
 
-    ip_address = request.client.host if request.client else "unknown"
+    ip_address = request.headers.get("CF-Connecting-IP")
+
+    if ip_address is None:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     token = await service.refresh(
         refresh_token=refresh_token, ip_address=ip_address
