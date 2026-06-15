@@ -1,5 +1,7 @@
 """Discord OAuth provider implementation."""
 
+import logging
+
 import aiohttp
 
 from src.domain.interfaces.oauth_provider import IOAuthProvider
@@ -12,6 +14,8 @@ from .exceptions import (
     TokenExchangeError,
     UserInfoRetrievalError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DiscordOAuthProvider(IOAuthProvider):
@@ -56,6 +60,11 @@ class DiscordOAuthProvider(IOAuthProvider):
                 data = await response.json()
 
                 if response.status != 200:
+                    logger.error(
+                        "[OAuth Provider] Unknown Discord API error, status %s : %e",  # noqa: E501
+                        response.status,
+                        data,
+                    )
                     raise TokenExchangeError(
                         f"Discord API error ({response.status}): {data}"
                     )
@@ -68,6 +77,10 @@ class DiscordOAuthProvider(IOAuthProvider):
                     ) from e
 
         except aiohttp.ClientError as e:
+            logger.error(
+                "[OAuth Provider] failed to communicate with Discord API: %e",
+                e,
+            )
             raise DiscordAPIError(
                 "Failed to communicate with Discord API"
             ) from e
@@ -88,11 +101,21 @@ class DiscordOAuthProvider(IOAuthProvider):
                 data = await response.json()
 
                 if response.status >= 500:
+                    logger.error(
+                        "[OAuth Provider] Unknown Discord API error, status %s: %e",  # noqa: E501
+                        response.status,
+                        data,
+                    )
                     raise DiscordAPIError(
                         f"Discord API error ({response.status}): {data}"
                     )
 
                 if response.status >= 400:
+                    logger.error(
+                        "[OAuth Provider] Unknown Discord API error, status %s: %e",  # noqa: E501
+                        response.status,
+                        data,
+                    )
                     raise TokenExchangeError(
                         f"Discord API error ({response.status}): {data}"
                     )
@@ -105,6 +128,7 @@ class DiscordOAuthProvider(IOAuthProvider):
                     ) from e
 
         except aiohttp.ClientError as e:
+            logger.error("[OAuth Provider] Unknown Discord API error: %e", e)
             raise DiscordAPIError(
                 "Failed to communicate with Discord API"
             ) from e
