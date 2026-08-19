@@ -8,9 +8,20 @@ variable "repository" {
 }
 
 
-job "auth-service" {
-  datacenters = ["dc1"]
+job "nightcore-auth-service" {
+  namespace = "apps"
   type        = "service"
+
+  constraint {
+    operator = "distinct_hosts"
+    value = "true"
+  }
+  
+  constraint {
+    attribute = "${meta.roles}"
+    operator  = "set_contains"
+    value     = "apps"
+  }
 
   update {
     max_parallel     = 1
@@ -31,13 +42,13 @@ job "auth-service" {
           "traefik.enable=true",
           "traefik.http.routers.dashboard-auth-service.rule=Host(`api.nightcore.space`) && PathPrefix(`/auth`)",
           "traefik.http.routers.dashboard-auth-service.priority=20",
-          "traefik.http.routers.dashboard-auth-service.entrypoints=websecure",
+          "traefik.http.routers.dashboard-auth-service.entrypoints=tunnel",
           "traefik.http.routers.dashboard-auth-service.service=dashboard-auth-service",
           "traefik.http.services.dashboard-auth-service.loadbalancer.server.port=5001",
-          "traefik.http.routers.dashboard-auth-service.tls=true",
           "traefik.http.middlewares.auth-ratelimit.ratelimit.average=2",
           "traefik.http.middlewares.auth-ratelimit.ratelimit.period=1s",
           "traefik.http.middlewares.auth-ratelimit.ratelimit.burst=2",
+          "traefik.http.middlewares.auth-ratelimit.ratelimit.sourcecriterion.requestheadername=CF-Connecting-IP",
           "traefik.http.routers.dashboard-auth-service.middlewares=auth-ratelimit",
       ]
     }
