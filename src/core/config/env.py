@@ -13,3 +13,5 @@ class BaseEnvConfig(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    ENVIRONMENT: str = "production"

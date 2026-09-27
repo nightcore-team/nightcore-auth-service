@@ -3,6 +3,7 @@
 from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
 
+from src.api.cookie import delete_cookie, set_cookie
 from src.api.dependencies import AppConfigDependency, OICServiceDependency
 from src.api.schemas import Token as TokenResponse
 
@@ -13,7 +14,10 @@ router = APIRouter()
     "/refresh", status_code=status.HTTP_200_OK, response_model=TokenResponse
 )
 async def refresh(
-    request: Request, response: Response, service: OICServiceDependency
+    request: Request,
+    response: Response,
+    service: OICServiceDependency,
+    config: AppConfigDependency,
 ):
     """Refresh access token by refresh token."""
     refresh_token = request.cookies.get("refresh_token")
@@ -33,19 +37,17 @@ async def refresh(
         refresh_token=refresh_token, ip_address=ip_address
     )
 
-    response.set_cookie(
-        "refresh_token",
-        token.refresh_token,
-        httponly=True,
-        max_age=service.config.jwt.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600,
-    )
+    set_cookie(config, response, token.refresh_token)
 
     return TokenResponse(access_token=token.access_token)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 async def logout(
-    request: Request, response: Response, service: OICServiceDependency
+    request: Request,
+    response: Response,
+    service: OICServiceDependency,
+    config: AppConfigDependency,
 ) -> None:
     """Logout user by refresh token."""
 
@@ -54,7 +56,7 @@ async def logout(
     if refresh_token is None:
         return
 
-    response.delete_cookie("refresh_token", httponly=True)
+    delete_cookie(config, response)
 
     await service.logout(refresh_token=refresh_token)
 
@@ -104,11 +106,6 @@ async def discord_callback(
         status_code=status.HTTP_302_FOUND,
     )
 
-    response.set_cookie(
-        "refresh_token",
-        token.refresh_token,
-        httponly=True,
-        max_age=service.config.jwt.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600,
-    )
+    set_cookie(config, response, token.refresh_token)
 
     return response

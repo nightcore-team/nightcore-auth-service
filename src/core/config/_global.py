@@ -7,6 +7,8 @@ from src.core.security.config import Config as JWTConfig
 from src.infrastructure.discord.config import Config as DiscordConfig
 from src.infrastructure.redis.config import Config as RedisConfig
 
+from .env import BaseEnvConfig
+
 
 class Config:
     """Global configuration class for the application."""
@@ -30,6 +32,11 @@ class Config:
     def redis(self) -> RedisConfig:
         """Return the Redis configuration settings."""
         return RedisConfig()  # type: ignore
+
+    @cached_property
+    def env(self) -> BaseEnvConfig:
+        """Return the BaseEnvConfig configuration settings."""
+        return BaseEnvConfig()  # type: ignore
 
 
 config = Config()

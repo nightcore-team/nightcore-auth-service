@@ -8,4 +8,5 @@ class Config(BaseEnvConfig):
 
     API_HOST: str
     API_PORT: int
+    REFRESH_TOKEN_COOKIE_NAME: str = "refresh_token"
     DASHBOARD_FRONTEND_URI: str
