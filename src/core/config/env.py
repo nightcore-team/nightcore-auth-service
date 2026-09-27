@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ABS_PATH = Path(__file__).parent.parent.parent.parent
@@ -14,4 +15,4 @@ class BaseEnvConfig(BaseSettings):
         extra="ignore",
     )
 
-    ENVIRONMENT: str = "production"
+    ENVIRONMENT: str = Field(default="production")
