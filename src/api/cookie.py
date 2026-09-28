@@ -27,6 +27,7 @@ def set_cookie(config: "Config", response: Response, value: str) -> None:
         httponly=True,
         max_age=config.jwt.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600,
         samesite=samesite,
+        secure=True,
     )
 
 
