@@ -37,5 +37,8 @@ def delete_cookie(config: "Config", response: Response) -> None:
     samesite = _get_samesite(config)
 
     response.delete_cookie(
-        config.api.REFRESH_TOKEN_COOKIE_NAME, httponly=True, samesite=samesite
+        config.api.REFRESH_TOKEN_COOKIE_NAME,
+        httponly=True,
+        samesite=samesite,
+        secure=True,
     )
